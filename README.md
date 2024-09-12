@@ -6,4 +6,4 @@
 
 ## ERD
 
-<img src="static/ERD.png" style="width:600px">
+<img src="static/ERD.png" style="width:100%">

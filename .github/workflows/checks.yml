@@ -1,0 +1,91 @@
+# 이 워크플로우의 이름을 "Code Quality Checks"로 설정합니다.
+name: Code Quality Checks
+
+# 이 워크플로우가 실행될 트리거를 정의합니다.
+on:
+  push:
+      branches:
+          - main  # main 브랜치에 push가 발생할 때 실행
+  pull_request:
+      branches:
+          - main  # main 브랜치로의 pull request가 생성될 때 실행
+
+# 실행될 작업들을 정의합니다.
+jobs:
+  ci:
+    # 이 작업이 실행될 운영 체제를 최신 버전의 Ubuntu로 지정합니다.
+    runs-on: ubuntu-latest
+    
+    # 필요한 서비스(여기서는 PostgreSQL)를 정의합니다.
+    services:
+      db:
+        image: postgres:15  # PostgreSQL 15 버전 이미지 사용
+        ports:
+          - 5432:5432  # 호스트의 5432 포트를 컨테이너의 5432 포트에 매핑
+        env:  # 데이터베이스 환경 변수 설정
+          POSTGRES_USER: ${{ secrets.PG_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.PG_NAME }}
+        options: >-  # 데이터베이스 헬스 체크 옵션
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # 실행할 단계들을 정의합니다.
+    steps:
+      - name: Check out the codes
+        uses: actions/checkout@v2  # 저장소 코드를 체크아웃
+
+      - name: Setup python environment
+        id: setup-python
+        uses: actions/setup-python@v2  # Python 환경 설정
+        with:
+          python-version: 3.12  # Python 3.12 버전 사용
+
+      - name: Set timezone to KST
+        run: |  # 시간대를 한국 표준시(KST)로 설정
+          sudo rm /etc/localtime
+          sudo ln -s /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+
+      - name: Install Poetry
+        run: |  # Poetry 설치
+          curl -sSL curl -sSL https://install.python-poetry.org | python3 -
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |  # 프로젝트 의존성 설치
+          poetry install
+
+      - name: Run black
+        run: |  # Black을 사용한 코드 포맷팅 검사
+          poetry run black . --check
+
+      - name: Run isort
+        run: |  # isort를 사용한 import 순서 검사
+          poetry run isort . --check --diff
+
+      - name: Run Mypy
+        run: |  # Mypy를 사용한 정적 타입 검사
+          poetry run mypy .
+
+      - name: Wait for PostgreSQL
+        run: |  # PostgreSQL 서비스가 준비될 때까지 대기
+          until pg_isready -h localhost -p ${{ secrets.DB_PORT }} -U ${{ secrets.PG_USER }}; do
+            sleep 1
+          done
+          
+      - name: Check working directory
+        run: |  # 현재 작업 디렉토리 확인
+          pwd
+          ls -la
+
+      - name: Run Django Migration
+        run: |  # Django 마이그레이션 실행
+          poetry run python manage.py makemigrations
+          poetry run python manage.py migrate
+
+      - name: Test python project
+        run: |  # Django 테스트 실행 및 커버리지 리포트 생성
+          poetry run coverage run manage.py test
+          poetry run coverage report -m
