@@ -21,6 +21,8 @@ INSTALLED_APPS = [
     "accounts.apps.AccountsConfig",
     "transaction_history.apps.TransactionHistoryConfig",
     "a_1",
+    "accounts",
+    "transaction_history",
 ]
 
 MIDDLEWARE = [
