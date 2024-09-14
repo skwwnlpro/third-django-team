@@ -49,7 +49,7 @@ omit = [
 ]
 
 [tool.django-stubs]
-django_settings_module = "miniproject.settings"
+django_settings_module = "config.settings"
 
 [build-system]
 requires = ["poetry-core"]
