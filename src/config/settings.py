@@ -7,7 +7,31 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# No Debug Mode in Production
+DEBUG = True
+
+ALLOWED_HOSTS: list[str | None | int] = ["localhost", "127.0.0.1", "0.0.0.0"]
+
+
 SECRET_KEY = os.getenv("SECRET_KEY")
+
+ROOT_URLCONF = "config.urls"
+
+
+# Database
+# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_NAME"),
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "HOST": os.getenv("POSTGRES_HOST"),
+        "PORT": os.getenv("POSTGRES_PORT"),
+    }
+}
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -17,9 +41,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # own apps
-    "users.apps.UsersConfig",
-    "accounts.apps.AccountsConfig",
-    "transaction_history.apps.TransactionHistoryConfig",
+    "users",
+    "accounts",
+    "transaction_history",
 ]
 
 MIDDLEWARE = [
@@ -91,4 +115,4 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = "users.User"
+AUTH_USER_MODEL = "users.Users"
