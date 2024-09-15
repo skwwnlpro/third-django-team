@@ -1,24 +1,16 @@
 from django.db import models
-
+from .consts import TRANSACTION_TYPE, PAYMENT_TYPE
 from accounts.models import Accounts
 
 
-class TransactionHistorys(models.Model):
-    class TransactionTypeChoices(models.TextChoices):
-        CASH = "cash", "Cash"
-        TRANSFER = "transfer", "Transfer"
-        AUTO_TRANSFER = "auto_transfer", "Auto Transfer"
-        CARD_PAYMENT = "card_payment", "Card Payment"
-
-    class DepositWithdrawalTypeChoices(models.TextChoices):
-        DEPOSIT = "deposit", "Deposit"
-        WITHDRAWAL = "withdrawal", "Withdrawal"
-
+class TransactionHistory(models.Model):
     account = models.ForeignKey(Accounts, on_delete=models.CASCADE)
-    transaction_amount = models.DecimalField(max_digits=14, decimal_places=2)
-    transaction_type = models.CharField(max_length=15, choices=TransactionTypeChoices.choices)
-    balance_after_transaction = models.DecimalField(max_digits=14, decimal_places=2)
-    deposit_withdrawal_type = models.CharField(max_length=15, choices=DepositWithdrawalTypeChoices.choices)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
+    balance = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    transaction_type = models.CharField(max_length=15, choices=TRANSACTION_TYPE)
+    payment_type = models.CharField(max_length=15, choices=PAYMENT_TYPE)
     transaction_description = models.CharField(max_length=255)
-    transaction_date = models.DateField(auto_now_add=True)
-    transaction_time = models.TimeField(auto_now_add=True)
+    transaction_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return f"{self.account} - {self.get_transaction_type_display()} - {self.amount}"
