@@ -1,11 +1,10 @@
 from django.db import models
-
 from accounts.models import Accounts
-
+from common.models import BaseModel
 from .consts import PAYMENT_TYPE, TRANSACTION_TYPE
 
 
-class TransactionHistory(models.Model):
+class TransactionHistory(BaseModel):
     account = models.ForeignKey(Accounts, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=14, decimal_places=2)
     balance = models.DecimalField(max_digits=14, decimal_places=2, default=0)
