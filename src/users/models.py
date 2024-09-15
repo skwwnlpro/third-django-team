@@ -1,41 +1,42 @@
 from typing import Any, Dict, Union
-
-from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
-                                        PermissionsMixin)
+from common.models import BaseModel
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
 
 class UserManager(BaseUserManager["Users"]):
-    def create_user(self, email: str, password: Union[str, None] = None) -> "Users":
+    def create_user(self, email: str, password: Union[str, None] = None, **extra_fields: Dict[str, Any]) -> "Users":
         if not email:
             raise ValueError("Email 주소를 필수로 입력하세요.")
         if password is None:
-            raise ValueError("Password를 필수로 입력하세요")
+            raise ValueError("Password를 필수로 입력하세요.")
+        if not (extra_fields.get("phone_number") and extra_fields.get("nickname")):
+            raise ValueError("Phone번호와 Nickname은 필수로 입력하세요.")
 
-        user = self.model(
-            email=self.normalize_email(email),
-        )
+        user = self.model(email=self.normalize_email(email), **extra_fields)
 
         user.set_password(password)  # hash + salt
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email: str, password: Union[str, None] = None) -> "Users":
-        user = self.create_user(
-            email,
-            password=password,
-        )
-        user.is_admin = True
+    def create_superuser(
+        self, email: str, password: Union[str, None] = None, **extra_fields: Dict[str, Any]
+    ) -> "Users":
+        if not (extra_fields.get("phone_number") and extra_fields.get("nickname")):
+            raise ValueError("Phone번호와 Nickname은 필수로 입력하세요.")
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_admin", True)
+        user = self.create_user(email, password=password, **extra_fields)
         user.save(using=self._db)
         return user
 
 
-class Users(AbstractBaseUser, PermissionsMixin):
+class Users(AbstractBaseUser, PermissionsMixin, BaseModel):
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=100)
-    nickname = models.CharField(max_length=50)
-    name = models.CharField(max_length=30, unique=True)
-    phone_number = models.CharField(max_length=30, unique=True)
+    nickname = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
+    phone_number = models.CharField(max_length=50, unique=True)
     last_login = models.DateTimeField(auto_now=True, null=True)
 
     # PermissionMixin: 권한 관리
