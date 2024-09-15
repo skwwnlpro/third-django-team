@@ -1,6 +1,7 @@
-from django.test import TestCase
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError  # 데이터 유효성 검사 과정에서 발생하는 예외(exception)
+from django.core.exceptions import \
+    ValidationError  # 데이터 유효성 검사 과정에서 발생하는 예외(exception)
+from django.test import TestCase
 
 # 현재 프로젝트에서 사용 중인 User 모델 클래스를 반환합니다.
 # 기본적으로 Django의 내장 User 모델(django.contrib.auth.models.User)을 반환합니다.

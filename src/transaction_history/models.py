@@ -1,6 +1,8 @@
 from django.db import models
-from .consts import TRANSACTION_TYPE, PAYMENT_TYPE
+
 from accounts.models import Accounts
+
+from .consts import PAYMENT_TYPE, TRANSACTION_TYPE
 
 
 class TransactionHistory(models.Model):
