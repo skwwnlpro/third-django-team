@@ -1,6 +1,8 @@
+from typing import Any, Dict, Union
+
+from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
+                                        PermissionsMixin)
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
-from typing import Any, Union, Dict
 
 
 class UserManager(BaseUserManager["Users"]):

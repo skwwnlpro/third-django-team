@@ -1,7 +1,7 @@
-from django.db import models
 from django.contrib.auth import get_user_model
-from .consts import BANK_CODE, ACCOUNT_TYPE
+from django.db import models
 
+from .consts import ACCOUNT_TYPE, BANK_CODE
 
 User = get_user_model()
 
