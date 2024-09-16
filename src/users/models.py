@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
@@ -7,7 +7,7 @@ from common.models import BaseModel
 
 
 class UserManager(BaseUserManager["Users"]):
-    def create_user(self, email: str, password: Union[str, None] = None, **extra_fields: Dict[str, Any]) -> "Users":
+    def create_user(self, email: str, password: str, **extra_fields: Dict[str, Any]) -> "Users":
         if not email:
             raise ValueError("Email 주소를 필수로 입력하세요.")
         if password is None:
@@ -22,7 +22,7 @@ class UserManager(BaseUserManager["Users"]):
         return user
 
     def create_superuser(
-        self, email: str, password: Union[str, None] = None, **extra_fields: Dict[str, Any]
+        self, email: str, password: str, **extra_fields: Dict[str, Any]
     ) -> "Users":
         if not (extra_fields.get("phone_number") and extra_fields.get("nickname")):
             raise ValueError("Phone번호와 Nickname은 필수로 입력하세요.")

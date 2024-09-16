@@ -9,6 +9,6 @@ BANK_CODE = [
 ACCOUNT_TYPE = [
     ("savings", "Savings Account"),
     ("checking", "Checking Account"),
-    ("Loan", "Loan Account"),
+    ("loan", "Loan Account"),
     ("overdraft", "Overdraft Account"),
 ]
