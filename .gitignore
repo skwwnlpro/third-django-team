@@ -5,6 +5,7 @@ venv/
 .vscode
 .env
 .coverage
+secret.json
 
 .DS_Store
 ._.DS_Store
