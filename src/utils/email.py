@@ -6,7 +6,7 @@ from utils.token import user_activation_token
 
 
 def message(domain, uidb64, token):
-    activation_link = reverse("activate", kwargs={"uidb64": uidb64, "token": token})
+    activation_link = reverse("activate_email", kwargs={"uidb64": uidb64, "token": token})
     return f"아래 링크를 클릭.\n\n회원가입 링크 : http://{domain}{activation_link}"
 
 
