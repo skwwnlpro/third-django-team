@@ -1,6 +1,10 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
+from typing import Any, Dict
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+User = get_user_model()
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -11,7 +15,7 @@ class SignUpSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True, required=True)
 
     class Meta:
-        model = get_user_model()
+        model = User
         fields = ["email", "password", "password2", "nickname", "name", "phone_number"]
 
     def validate(self, arr):
@@ -21,7 +25,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     # User 생성
     def create(self, validated_data):
-        user = get_user_model().objects.create_user(
+        user = User.objects.create_user(
             email=validated_data["email"],
             password=validated_data["password"],
             nickname=validated_data["nickname"],
@@ -35,5 +39,23 @@ class SignUpSerializer(serializers.ModelSerializer):
         return user
 
 
-class LoginSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(write_only=True, )
+class LoginSerializer(TokenObtainPairSerializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, arr: Dict[str, Any]) -> Dict[str, Any]:
+        email = arr.get("email")
+        password = arr.get("password")
+
+        user = authenticate(email=email, password=password)
+        if user is None:
+            raise serializers.ValidationError("Email or password is incorrect")
+
+        arr["user"] = user
+        return arr
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "name"]

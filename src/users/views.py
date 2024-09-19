@@ -3,11 +3,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
-from .serializer import SignUpSerializer
+from .serializers import SignUpSerializer, LoginSerializer
 from django.contrib.auth import get_user_model
 from django.contrib.sites.shortcuts import get_current_site
 from utils.token import user_activation_token
-from utils.email import send_email
+from utils.email import send_verification_email
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework.permissions import IsAuthenticated
 
 User = get_user_model()
 
@@ -30,7 +33,7 @@ class SignUpView(APIView):
 
             # Token 생성과 Email 인증
             current_site = get_current_site(request)
-            send_email(user, current_site.domain)
+            send_verification_email(user, current_site.domain)
 
             return Response({"message": "SignUp is successfully"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -54,4 +57,54 @@ class EmailActivate(APIView):
 
 
 class LoginView(APIView):
-    pass
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data["user"]  # 시리얼라이저에서 인증된 사용자 가져오기
+        refresh = RefreshToken.for_user(user)  # 가져온다음 refresh token 생성
+
+        access_token = refresh.access_token  # type: ignore
+
+        response = Response({"message": "로그인이 성공했습니다."}, status=status.HTTP_200_OK)
+
+        # cookies에 access token 저장
+        response.set_cookie(
+            key="access_token",
+            value=str(refresh.access_token),  # type: ignore
+            httponly=True,  # 자바스크립트 접근 불가
+            secure=True,  # HTTPS에서만 전송
+            samesite="Lax",  # CSRF 방지용
+            max_age=3600,  # 1시간동안 쿠키 유지
+        )
+        # cookies에 refresh token 저장
+        response.set_cookie(key="refresh_token", value=str(refresh), httponly=True, secure=True, samesite="Lax")
+        return response
+
+
+class LogoutAPIView(APIView):
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh_token")
+            if not refresh_token:
+                return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response({"success": "User logged out successfully"}, status=status.HTTP_200_OK)
+        except TokenError:
+            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):    
+        user = request.user
+        
+        return Response({'id': user.id, "email":user.email})
